@@ -2,28 +2,21 @@
   "name": "@myrepo/api-client",
   "version": "0.1.0",
   "description": "Shared Axios instance with interceptors for authentication and error handling",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./src/index.ts",
+      "require": "./src/index.ts",
+      "types": "./src/index.ts"
     }
-  },
-  "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "clean": "rm -rf dist"
   },
   "dependencies": {
     "axios": "^1.7.7"
   },
   "devDependencies": {
-    "@types/node": "^22.5.4",
-    "tsup": "^8.2.4",
-    "typescript": "^5.6.2"
+    "@types/node": "^20.17.9",
+    "typescript": "^5.7.2"
   },
   "publishConfig": {
     "access": "restricted"

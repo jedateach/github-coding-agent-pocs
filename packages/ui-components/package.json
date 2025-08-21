@@ -2,27 +2,21 @@
   "name": "@myrepo/ui-components",
   "version": "0.1.0",
   "description": "Shared UI components wrapping ShadCN with Tailwind CSS",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./src/index.ts",
+      "require": "./src/index.ts",
+      "types": "./src/index.ts"
     }
-  },
-  "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --external react",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --external react --watch",
-    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",
-    "class-variance-authority": "^0.7.0",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.438.0",
-    "tailwind-merge": "^2.5.2",
+    "lucide-react": "^0.468.0",
+    "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7"
   },
   "peerDependencies": {
@@ -31,10 +25,9 @@
     "tailwindcss": "^3.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.5",
-    "@types/react-dom": "^18.3.0",
-    "tsup": "^8.2.4",
-    "typescript": "^5.6.2"
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "typescript": "^5.7.2"
   },
   "publishConfig": {
     "access": "restricted"

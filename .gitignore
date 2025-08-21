@@ -4,9 +4,12 @@
 /node_modules
 /.pnp
 .pnp.js
+**/node_modules
 
 # testing
 /coverage
+test-results/
+playwright-report/
 
 # next.js
 /.next/
@@ -14,6 +17,7 @@
 
 # production
 /build
+**/dist/
 
 # misc
 .DS_Store
@@ -34,3 +38,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
