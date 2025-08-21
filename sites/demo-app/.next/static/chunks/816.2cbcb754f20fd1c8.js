@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[816],{1816:(e,a,n)=>{n.d(a,{worker:()=>m});var c=n(8971),s=n(2981),i=n(4405);let k=[s.L.get("/api/me",()=>i.c.json({name:"Jane Doe",email:"jane@example.com"}))],l=[s.L.get("/api/accounts",()=>i.c.json([{id:"1",name:"Checking",balance:1e3},{id:"2",name:"Savings",balance:5e3}]))],m=(0,c.k)(...k,...l)}}]);
