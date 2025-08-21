@@ -1,0 +1,12 @@
+module.exports = {
+  root: true,
+  extends: [
+    'next/core-web-vitals',
+  ],
+  rules: {
+    'prefer-const': 'error',
+    'no-var': 'error',
+    'react/no-unescaped-entities': 'off',
+  },
+  ignorePatterns: ['dist/', 'node_modules/', '.next/', 'out/'],
+};
