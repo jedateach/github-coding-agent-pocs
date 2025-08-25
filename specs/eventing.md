@@ -1,0 +1,2 @@
+- SSE connection
+- GraphQL subscriptions

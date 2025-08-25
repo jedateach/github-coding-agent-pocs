@@ -1,0 +1,3 @@
+- Eslint
+- Jest
+- Playwright
