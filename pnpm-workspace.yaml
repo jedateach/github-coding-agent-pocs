@@ -1,0 +1,9 @@
+packages:
+  - "packages/*"
+  - "sites/demo/*"
+
+# Enable isolated workspace installs for independent deployments
+link-workspace-packages: deep
+
+# Use strict peer dependencies to ensure version consistency
+prefer-workspace-packages: true
