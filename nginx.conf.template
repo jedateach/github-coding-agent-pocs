@@ -1,0 +1,61 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
+
+    server {
+        listen 80;
+        server_name localhost;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+            access_log off;
+        }
+
+        # Handle Next.js static files
+        location /_next/static/ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+            access_log off;
+        }
+
+        # Main location block with runtime config injection
+        location / {
+            try_files $uri $uri/ $uri.html /index.html;
+            
+            # Runtime configuration injection
+            # Replace the placeholder script with actual config values from environment variables
+            sub_filter '<script id="runtime-config">window.__RUNTIME_CONFIG__ = {};</script>' 
+                      '<script id="runtime-config">window.__RUNTIME_CONFIG__ = {"API_URL":"${API_URL}","FEATURE_X_ENABLED":${FEATURE_X_ENABLED},"APP_NAME":"${APP_NAME}"};</script>';
+            sub_filter_once on;
+            sub_filter_types text/html;
+        }
+
+        # Error pages
+        error_page 404 /404.html;
+        error_page 500 502 503 504 /50x.html;
+        
+        location = /50x.html {
+            root /usr/share/nginx/html;
+        }
+    }
+}

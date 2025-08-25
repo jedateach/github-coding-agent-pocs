@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  demo-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      # These environment variables will be used by NGINX to inject runtime config
+      - API_URL=https://api.production.com
+      - FEATURE_X_ENABLED=true
+      - APP_NAME=Production Demo App
+    container_name: demo-app-nginx
