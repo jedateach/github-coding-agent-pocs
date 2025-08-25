@@ -44,8 +44,8 @@ http {
             
             # Runtime configuration injection
             # Replace the placeholder script with actual config values from environment variables
-            sub_filter '<script>window.__CONFIG__ = {};</script>' 
-                      '<script>window.__CONFIG__ = {"API_URL":"${API_URL}","FEATURE_X_ENABLED":${FEATURE_X_ENABLED},"APP_NAME":"${APP_NAME}"};</script>';
+            sub_filter '<script id="runtime-config">window.__RUNTIME_CONFIG__ = {};</script>' 
+                      '<script id="runtime-config">window.__RUNTIME_CONFIG__ = {"API_URL":"${API_URL}","FEATURE_X_ENABLED":${FEATURE_X_ENABLED},"APP_NAME":"${APP_NAME}"};</script>';
             sub_filter_once on;
             sub_filter_types text/html;
         }

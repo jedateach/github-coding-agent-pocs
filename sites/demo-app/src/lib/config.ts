@@ -2,7 +2,7 @@
  * Configuration utility for environment variables and runtime overrides.
  * 
  * Build-time: Uses process.env for server-side config
- * Runtime (client): Reads from window.__CONFIG__ if present, overriding env defaults
+ * Runtime (client): Reads from window.__RUNTIME_CONFIG__ if present, overriding env defaults
  */
 
 // Define the shape of our configuration
@@ -15,7 +15,7 @@ export interface AppConfig {
 // Extend the global Window interface to include our config
 declare global {
   interface Window {
-    __CONFIG__?: Partial<AppConfig>;
+    __RUNTIME_CONFIG__?: Partial<AppConfig>;
   }
 }
 
@@ -29,7 +29,7 @@ const defaultConfig: AppConfig = {
 /**
  * Get configuration with runtime overrides
  * On the server: returns env-based config
- * On the client: merges env-based config with runtime window.__CONFIG__
+ * On the client: merges env-based config with runtime window.__RUNTIME_CONFIG__
  */
 export function getConfig(): AppConfig {
   // Server-side: return default config from environment
@@ -38,7 +38,7 @@ export function getConfig(): AppConfig {
   }
 
   // Client-side: merge default config with runtime overrides
-  const runtimeConfig = window.__CONFIG__ || {};
+  const runtimeConfig = window.__RUNTIME_CONFIG__ || {};
   return {
     ...defaultConfig,
     ...runtimeConfig,
@@ -64,4 +64,13 @@ export function isClient(): boolean {
  */
 export function isServer(): boolean {
   return typeof window === 'undefined';
+}
+
+/**
+ * Check if runtime configuration is available
+ */
+export function hasRuntimeConfig(): boolean {
+  return typeof window !== 'undefined' && 
+         window.__RUNTIME_CONFIG__ !== undefined && 
+         Object.keys(window.__RUNTIME_CONFIG__).length > 0;
 }

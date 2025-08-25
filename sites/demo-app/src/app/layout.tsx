@@ -14,10 +14,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Placeholder for runtime config injection by NGINX */}
-        <script dangerouslySetInnerHTML={{
-          __html: 'window.__CONFIG__ = {};'
-        }} />
+        {/* Placeholder for runtime config injection by NGINX - will be replaced by sub_filter */}
+        <script 
+          id="runtime-config"
+          dangerouslySetInnerHTML={{
+            __html: 'window.__RUNTIME_CONFIG__ = {};'
+          }} 
+        />
       </head>
       <body className="font-sans antialiased">
         {children}

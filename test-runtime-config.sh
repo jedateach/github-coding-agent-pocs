@@ -22,7 +22,7 @@ echo "Build successful!"
 
 # Verify the placeholder script is in the HTML
 echo "Checking for placeholder script in HTML..."
-if grep -q 'window.__CONFIG__ = {}' out/index.html; then
+if grep -q 'window.__RUNTIME_CONFIG__ = {}' out/index.html; then
     echo "✓ Placeholder script found in HTML"
 else
     echo "✗ Placeholder script not found in HTML"
@@ -38,7 +38,7 @@ cp -r out/* /tmp/test-runtime-config/
 
 # Simulate NGINX substitution
 TEST_CONFIG='{"API_URL":"https://api.production.com","FEATURE_X_ENABLED":true,"APP_NAME":"Production Demo App"}'
-sed -i "s|window.__CONFIG__ = {};|window.__CONFIG__ = $TEST_CONFIG;|g" /tmp/test-runtime-config/index.html
+sed -i "s|<script id=\"runtime-config\">window.__RUNTIME_CONFIG__ = {};</script>|<script id=\"runtime-config\">window.__RUNTIME_CONFIG__ = $TEST_CONFIG;</script>|g" /tmp/test-runtime-config/index.html
 
 # Verify the substitution worked
 echo "Verifying runtime configuration substitution..."
@@ -67,7 +67,7 @@ fi
 echo ""
 echo "All tests passed! ✅"
 echo ""
-echo "The application can be deployed with NGINX and runtime configuration"
+echo "The Next.js application can be deployed with NGINX and runtime configuration"
 echo "can be injected without rebuilding the application."
 echo ""
 echo "To test in a browser:"
@@ -78,3 +78,10 @@ echo ""
 echo "Example with Python:"
 echo "cd /tmp/test-runtime-config && python3 -m http.server 8000"
 echo "Then open http://localhost:8000 in your browser"
+echo ""
+echo "Key features demonstrated:"
+echo "- ✅ Runtime configuration injection without rebuild"
+echo "- ✅ Next.js 15.5.0 with App Router and static export"
+echo "- ✅ TypeScript configuration utility with type safety"
+echo "- ✅ Client-side configuration merging"
+echo "- ✅ Feature toggles and environment-specific settings"

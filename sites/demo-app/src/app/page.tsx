@@ -1,6 +1,6 @@
 'use client';
 
-import { getConfig, getConfigValue, isClient } from '@/lib/config';
+import { getConfig, getConfigValue, isClient, hasRuntimeConfig } from '@/lib/config';
 import { useEffect, useState } from 'react';
 
 export default function Home() {
@@ -82,7 +82,7 @@ export default function Home() {
               <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
                 <span className="font-medium text-gray-700">Runtime Config:</span>
                 <span className="text-sm">
-                  {isClient() && typeof window !== 'undefined' && window.__CONFIG__ 
+                  {isClient() && hasRuntimeConfig()
                     ? 'Available' 
                     : 'Not Available'}
                 </span>

@@ -13,7 +13,7 @@ The system allows for:
 
 1. **Next.js App**: Built with static export for optimal performance
 2. **Configuration Utility**: Centralized config management in `lib/config.ts`
-3. **HTML Placeholder**: `<script>window.__CONFIG__ = {};</script>` in the HTML template
+3. **HTML Placeholder**: `<script id="runtime-config">window.__RUNTIME_CONFIG__ = {};</script>` in the HTML template
 4. **NGINX Injection**: Uses `sub_filter` to replace placeholder with real configuration
 5. **Docker**: Multi-stage build for production deployment
 
@@ -57,10 +57,10 @@ NGINX injects configuration via script replacement:
 
 ```html
 <!-- Placeholder in HTML -->
-<script>window.__CONFIG__ = {};</script>
+<script id="runtime-config">window.__RUNTIME_CONFIG__ = {};</script>
 
 <!-- Replaced by NGINX -->
-<script>window.__CONFIG__ = {"API_URL":"https://api.prod.com","FEATURE_X_ENABLED":true,"APP_NAME":"Production App"};</script>
+<script id="runtime-config">window.__RUNTIME_CONFIG__ = {"API_URL":"https://api.prod.com","FEATURE_X_ENABLED":true,"APP_NAME":"Production App"};</script>
 ```
 
 ### Configuration Utility
@@ -75,7 +75,7 @@ export function getConfig(): AppConfig {
   }
 
   // Client-side: merge default config with runtime overrides
-  const runtimeConfig = window.__CONFIG__ || {};
+  const runtimeConfig = window.__RUNTIME_CONFIG__ || {};
   return {
     ...defaultConfig,
     ...runtimeConfig,
@@ -150,18 +150,18 @@ The demo application displays:
 
 1. Build the application and check that the placeholder script is in the HTML:
    ```bash
-   grep "__CONFIG__" sites/demo-app/out/index.html
+   grep "__RUNTIME_CONFIG__" sites/demo-app/out/index.html
    ```
 
 2. Run with different environment variables and verify the injected script:
    ```bash
    docker run -p 8080:80 -e FEATURE_X_ENABLED="true" demo-app
-   curl http://localhost:8080 | grep "__CONFIG__"
+   curl http://localhost:8080 | grep "__RUNTIME_CONFIG__"
    ```
 
 3. Check that client-side code receives the correct configuration:
    - Open browser developer tools
-   - Check `window.__CONFIG__` in the console
+   - Check `window.__RUNTIME_CONFIG__` in the console
    - Verify the demo page displays the correct values
 
 ## Key Benefits
