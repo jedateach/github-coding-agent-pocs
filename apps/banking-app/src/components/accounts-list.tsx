@@ -3,14 +3,8 @@
 import { useParty } from './party-provider'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
+import { LiveBalance } from './live-balance'
 import Link from 'next/link'
-
-function formatCurrency(cents: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(cents / 100)
-}
 
 function getAccountTypeLabel(type: string): string {
   switch (type) {
@@ -68,9 +62,10 @@ export function AccountsList() {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Current Balance</p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(account.balance)}
-                  </p>
+                  <LiveBalance 
+                    accountId={account.id}
+                    initialBalance={account.balance}
+                  />
                 </div>
                 
                 <Button asChild className="w-full">

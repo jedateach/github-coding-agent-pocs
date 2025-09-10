@@ -1,4 +1,4 @@
-import { graphql, HttpResponse } from 'msw'
+import { graphql, HttpResponse, http } from 'msw'
 
 // Mock data
 const mockUser = {
@@ -46,6 +46,14 @@ const mockUser = {
   ],
 }
 
+// In-memory store to track account balances for real-time updates
+const accountBalances = new Map<string, number>()
+mockUser.parties.forEach(party => {
+  party.accounts.forEach(account => {
+    accountBalances.set(account.id, account.balance)
+  })
+})
+
 // Helper to generate mock transactions
 function generateMockTransactions(accountId: string, limit = 30, offset = 0) {
   const transactions = []
@@ -68,12 +76,33 @@ function generateMockTransactions(accountId: string, limit = 30, offset = 0) {
   return transactions
 }
 
+// Helper to simulate balance updates
+function simulateBalanceUpdate(accountId: string) {
+  const currentBalance = accountBalances.get(accountId) || 0
+  const change = Math.floor(Math.random() * 10000 - 5000) // Random change between -$50 and $50
+  const newBalance = Math.max(0, currentBalance + change) // Don't go below 0
+  accountBalances.set(accountId, newBalance)
+  return newBalance
+}
+
 export const handlers = [
   // Current user query
   graphql.query('GetCurrentUser', () => {
+    // Update balances in response with current values
+    const updatedUser = {
+      ...mockUser,
+      parties: mockUser.parties.map(party => ({
+        ...party,
+        accounts: party.accounts.map(account => ({
+          ...account,
+          balance: accountBalances.get(account.id) || account.balance,
+        })),
+      })),
+    }
+
     return HttpResponse.json({
       data: {
-        currentUser: mockUser,
+        currentUser: updatedUser,
       },
     })
   }),
@@ -89,6 +118,7 @@ export const handlers = [
       if (foundAccount) {
         account = {
           ...foundAccount,
+          balance: accountBalances.get(id) || foundAccount.balance,
           transactions: generateMockTransactions(id, transactionLimit, transactionOffset),
         }
         break
@@ -112,13 +142,20 @@ export const handlers = [
   graphql.mutation('Transfer', ({ variables }) => {
     const { input } = variables as any
     
+    // Update account balances
+    const fromBalance = accountBalances.get(input.fromAccountId) || 0
+    const toBalance = accountBalances.get(input.toAccountId) || 0
+    
+    accountBalances.set(input.fromAccountId, fromBalance - input.amount)
+    accountBalances.set(input.toAccountId, toBalance + input.amount)
+    
     // Mock successful transfer
     const transaction = {
       id: `txn-transfer-${Date.now()}`,
       date: new Date().toISOString(),
       description: input.description || 'Transfer',
       amount: -input.amount, // Negative for sender
-      balanceAfter: 200000, // Mock balance after
+      balanceAfter: fromBalance - input.amount,
     }
     
     return HttpResponse.json({
@@ -132,13 +169,17 @@ export const handlers = [
   graphql.mutation('Payment', ({ variables }) => {
     const { input } = variables as any
     
+    // Update account balance
+    const fromBalance = accountBalances.get(input.fromAccountId) || 0
+    accountBalances.set(input.fromAccountId, fromBalance - input.amount)
+    
     // Mock successful payment
     const transaction = {
       id: `txn-payment-${Date.now()}`,
       date: new Date().toISOString(),
       description: input.description || `Payment to ${input.externalIban}`,
       amount: -input.amount, // Negative for sender
-      balanceAfter: 150000, // Mock balance after
+      balanceAfter: fromBalance - input.amount,
     }
     
     return HttpResponse.json({
@@ -148,21 +189,153 @@ export const handlers = [
     })
   }),
 
-  // Account balance subscription (mock) - In real app, this would use proper subscription transport
+  // SSE endpoint for GraphQL subscriptions
+  http.get('/api/graphql-sse', ({ request }) => {
+    const url = new URL(request.url)
+    const query = url.searchParams.get('query')
+    const variablesParam = url.searchParams.get('variables')
+    
+    let variables = {}
+    try {
+      variables = variablesParam ? JSON.parse(variablesParam) : {}
+    } catch (e) {
+      console.error('Failed to parse variables:', e)
+    }
+    
+    const encoder = new TextEncoder()
+    
+    // Determine subscription type from query
+    if (query?.includes('SubscribeToAccountBalance')) {
+      const accountId = (variables as any)?.accountId
+      
+      if (!accountId) {
+        return new HttpResponse('Missing accountId parameter', { status: 400 })
+      }
+      
+      const stream = new ReadableStream({
+        start(controller) {
+          // Send initial balance
+          const initialBalance = accountBalances.get(accountId) || 0
+          const initialData = {
+            data: {
+              accountBalanceUpdated: {
+                id: accountId,
+                balance: initialBalance,
+              },
+            },
+          }
+          
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(initialData)}\n\n`)
+          )
+          
+          // Send periodic balance updates
+          const interval = setInterval(() => {
+            const newBalance = simulateBalanceUpdate(accountId)
+            const updateData = {
+              data: {
+                accountBalanceUpdated: {
+                  id: accountId,
+                  balance: newBalance,
+                },
+              },
+            }
+            
+            try {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify(updateData)}\n\n`)
+              )
+            } catch (error) {
+              // Stream might be closed
+              clearInterval(interval)
+            }
+          }, 5000) // Update every 5 seconds
+          
+          // Clean up on stream close
+          return () => {
+            clearInterval(interval)
+          }
+        },
+      })
+      
+      return new HttpResponse(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      })
+    }
+    
+    if (query?.includes('SubscribeToTransactions')) {
+      const accountId = (variables as any)?.accountId
+      
+      if (!accountId) {
+        return new HttpResponse('Missing accountId parameter', { status: 400 })
+      }
+      
+      const stream = new ReadableStream({
+        start(controller) {
+          // Send periodic transaction updates
+          const interval = setInterval(() => {
+            const transaction = {
+              id: `txn-live-${Date.now()}`,
+              date: new Date().toISOString(),
+              description: 'Live transaction update',
+              amount: Math.floor(Math.random() * 10000 - 5000),
+              balanceAfter: accountBalances.get(accountId) || 0,
+            }
+            
+            const updateData = {
+              data: {
+                transactionAdded: transaction,
+              },
+            }
+            
+            try {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify(updateData)}\n\n`)
+              )
+            } catch (error) {
+              // Stream might be closed
+              clearInterval(interval)
+            }
+          }, 10000) // New transaction every 10 seconds
+          
+          // Clean up on stream close
+          return () => {
+            clearInterval(interval)
+          }
+        },
+      })
+      
+      return new HttpResponse(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      })
+    }
+    
+    return new HttpResponse('Unknown subscription', { status: 400 })
+  }),
+
+  // Legacy subscription handlers (kept for compatibility but should use SSE endpoint above)
   graphql.query('SubscribeToAccountBalance', ({ variables }) => {
-    // For static export, we'll simulate this with periodic updates
+    const accountId = (variables as any)?.accountId
     return HttpResponse.json({
       data: {
         accountBalanceUpdated: {
-          id: variables.accountId,
-          balance: Math.floor(Math.random() * 1000000),
+          id: accountId,
+          balance: accountBalances.get(accountId) || Math.floor(Math.random() * 1000000),
         },
       },
     })
   }),
 
-  // Transaction added subscription (mock) - In real app, this would use proper subscription transport  
   graphql.query('SubscribeToTransactions', ({ variables }) => {
+    const accountId = (variables as any)?.accountId
     return HttpResponse.json({
       data: {
         transactionAdded: {
@@ -170,7 +343,7 @@ export const handlers = [
           date: new Date().toISOString(),
           description: 'Live transaction update',
           amount: Math.floor(Math.random() * 10000 - 5000),
-          balanceAfter: Math.floor(Math.random() * 1000000),
+          balanceAfter: accountBalances.get(accountId) || Math.floor(Math.random() * 1000000),
         },
       },
     })

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useGetAccountQuery } from '@/lib/gql/urql'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
+import { LiveBalance } from './live-balance'
+import { LiveTransactions } from './live-transactions'
 import Link from 'next/link'
 import { ArrowLeft, RefreshCw } from 'lucide-react'
 
@@ -75,6 +77,11 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
 
   const loadMoreTransactions = () => {
     setTransactionOffset(prev => prev + 30)
+  }
+
+  const handleNewTransaction = (newTransaction: Transaction) => {
+    // Add new live transaction to the top of the list
+    setAllTransactions(prev => [newTransaction, ...prev])
   }
 
   if (fetching && transactionOffset === 0) {
@@ -167,18 +174,25 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Current Balance</p>
-              <p className="text-3xl font-bold">
-                {formatCurrency(account.balance)}
-              </p>
+              <LiveBalance 
+                accountId={account.id}
+                initialBalance={account.balance}
+              />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Transactions */}
+      {/* Live Transactions */}
+      <LiveTransactions 
+        accountId={accountId}
+        onNewTransaction={handleNewTransaction}
+      />
+
+      {/* Historical Transactions */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle>Transaction History</CardTitle>
         </CardHeader>
         <CardContent>
           {allTransactions.length === 0 ? (

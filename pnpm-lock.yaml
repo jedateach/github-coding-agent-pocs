@@ -80,6 +80,9 @@ importers:
       urql:
         specifier: ^5.0.0
         version: 5.0.1(@urql/core@6.0.1)(react@19.1.1)
+      wonka:
+        specifier: ^6.3.5
+        version: 6.3.5
       zod:
         specifier: ^3.22.4
         version: 3.25.76
