@@ -1,12 +1,7 @@
 'use client'
 
-import { Client, Provider, cacheExchange, fetchExchange, subscriptionExchange } from 'urql'
+import { Client, Provider, cacheExchange, fetchExchange } from 'urql'
 import { useMemo } from 'react'
-
-// Setup for SSE-based subscriptions (demo purposes)
-const subscriptionForwarder = (operation: any) => {
-  return new EventSource(`/api/graphql/stream?query=${encodeURIComponent(operation.query)}`)
-}
 
 export function UrqlProvider({ children }: { children: React.ReactNode }) {
   const client = useMemo(() => {
@@ -15,10 +10,8 @@ export function UrqlProvider({ children }: { children: React.ReactNode }) {
       exchanges: [
         cacheExchange,
         fetchExchange,
-        subscriptionExchange({
-          forwardSubscription: subscriptionForwarder,
-          enableAllOperations: true,
-        }),
+        // Note: For this demo, subscriptions are simulated via MSW
+        // In a real app, you'd add subscriptionExchange with proper SSE or WebSocket setup
       ],
     })
   }, [])

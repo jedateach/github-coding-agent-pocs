@@ -148,8 +148,8 @@ export const handlers = [
     })
   }),
 
-  // Account balance subscription (mock)
-  graphql.subscription('SubscribeToAccountBalance', ({ variables }) => {
+  // Account balance subscription (mock) - In real app, this would use proper subscription transport
+  graphql.query('SubscribeToAccountBalance', ({ variables }) => {
     // For static export, we'll simulate this with periodic updates
     return HttpResponse.json({
       data: {
@@ -161,8 +161,8 @@ export const handlers = [
     })
   }),
 
-  // Transaction added subscription (mock)
-  graphql.subscription('SubscribeToTransactions', ({ variables }) => {
+  // Transaction added subscription (mock) - In real app, this would use proper subscription transport  
+  graphql.query('SubscribeToTransactions', ({ variables }) => {
     return HttpResponse.json({
       data: {
         transactionAdded: {
