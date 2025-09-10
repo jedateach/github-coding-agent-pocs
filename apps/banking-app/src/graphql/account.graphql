@@ -1,0 +1,15 @@
+query GetAccount($id: ID!, $transactionLimit: Int, $transactionOffset: Int) {
+  account(id: $id) {
+    id
+    name
+    type
+    balance
+    transactions(limit: $transactionLimit, offset: $transactionOffset) {
+      id
+      date
+      description
+      amount
+      balanceAfter
+    }
+  }
+}

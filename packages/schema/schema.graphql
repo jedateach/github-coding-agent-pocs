@@ -1,0 +1,77 @@
+# Core types
+
+type User {
+  id: ID!
+  name: String!
+  parties: [Party!]!
+}
+
+type Party {
+  id: ID!
+  type: PartyType!   # PERSON | BUSINESS
+  name: String!
+  accounts: [Account!]!
+}
+
+enum PartyType {
+  PERSON
+  BUSINESS
+}
+
+type Account {
+  id: ID!
+  name: String!
+  type: AccountType! # CHECKING | SAVINGS | CREDIT
+  balance: Int!      # balance in cents
+  transactions(limit: Int, offset: Int): [Transaction!]!
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT
+}
+
+type Transaction {
+  id: ID!
+  date: String!
+  description: String!
+  amount: Int!    # positive = credit, negative = debit
+  balanceAfter: Int!
+}
+
+# Queries
+
+type Query {
+  currentUser: User!
+  party(id: ID!): Party
+  account(id: ID!): Account
+}
+
+# Mutations
+
+input TransferInput {
+  fromAccountId: ID!
+  toAccountId: ID!
+  amount: Int!
+  description: String
+}
+
+input PaymentInput {
+  fromAccountId: ID!
+  externalIban: String!
+  amount: Int!
+  description: String
+}
+
+type Mutation {
+  transfer(input: TransferInput!): Transaction!
+  payment(input: PaymentInput!): Transaction!
+}
+
+# Subscriptions
+
+type Subscription {
+  accountBalanceUpdated(accountId: ID!): Account!
+  transactionAdded(accountId: ID!): Transaction!
+}

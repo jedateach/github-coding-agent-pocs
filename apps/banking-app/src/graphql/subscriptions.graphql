@@ -1,0 +1,16 @@
+subscription SubscribeToAccountBalance($accountId: ID!) {
+  accountBalanceUpdated(accountId: $accountId) {
+    id
+    balance
+  }
+}
+
+subscription SubscribeToTransactions($accountId: ID!) {
+  transactionAdded(accountId: $accountId) {
+    id
+    date
+    description
+    amount
+    balanceAfter
+  }
+}
