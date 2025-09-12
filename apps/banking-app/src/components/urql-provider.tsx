@@ -2,7 +2,7 @@
 
 import { Client, Provider, cacheExchange, fetchExchange } from 'urql'
 import { useMemo } from 'react'
-// import { sseSubscriptionExchange } from '@/lib/sse-exchange'
+import { sseSubscriptionExchange } from '@/lib/sse-exchange'
 
 export function UrqlProvider({ children }: { children: React.ReactNode }) {
   const client = useMemo(() => {
@@ -11,10 +11,9 @@ export function UrqlProvider({ children }: { children: React.ReactNode }) {
       exchanges: [
         cacheExchange,
         fetchExchange,
-        // TODO: Re-enable SSE-based subscription exchange for real-time updates
-        // sseSubscriptionExchange({
-        //   url: '/api/graphql-sse',
-        // }),
+        sseSubscriptionExchange({
+          url: '/api/graphql-sse',
+        }),
       ],
     })
   }, [])

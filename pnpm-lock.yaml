@@ -56,6 +56,9 @@ importers:
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
+      graphql-sse:
+        specifier: ^2.5.4
+        version: 2.5.4(graphql@16.11.0)
       lucide-react:
         specifier: ^0.294.0
         version: 0.294.0(react@19.1.1)
@@ -5576,6 +5579,15 @@ packages:
     transitivePeerDependencies:
       - encoding
     dev: true
+
+  /graphql-sse@2.5.4(graphql@16.11.0):
+    resolution: {integrity: sha512-8PIGHQPv1vokYboL8KsoBomvyJCUMJCAwSp5f+bR2qVoYtPo7CYowrYV7LFiXuiirX0cxVzgUBFNa5BaI4rZ2A==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      graphql: '>=0.11 <=16'
+    dependencies:
+      graphql: 16.11.0
+    dev: false
 
   /graphql-tag@2.12.6(graphql@16.11.0):
     resolution: {integrity: sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==}

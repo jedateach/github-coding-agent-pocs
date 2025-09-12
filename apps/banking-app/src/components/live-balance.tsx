@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSubscribeToAccountBalanceSubscription } from '@/lib/gql/urql'
 
 interface LiveBalanceProps {
   accountId: string
@@ -19,21 +20,21 @@ export function LiveBalance({ accountId, initialBalance, className }: LiveBalanc
   const [currentBalance, setCurrentBalance] = useState(initialBalance)
   const [isLive, setIsLive] = useState(false)
 
+  // Subscribe to balance updates using GraphQL SSE subscription
+  const [subscriptionResult] = useSubscribeToAccountBalanceSubscription(
+    { variables: { accountId } },
+    (prev, data) => {
+      if (data?.accountBalanceUpdated?.balance !== undefined) {
+        setCurrentBalance(data.accountBalanceUpdated.balance)
+        setIsLive(true)
+      }
+      return data
+    }
+  )
+
   useEffect(() => {
     setCurrentBalance(initialBalance)
   }, [initialBalance])
-
-  useEffect(() => {
-    // Simulate real-time balance updates with polling
-    const interval = setInterval(() => {
-      // Simulate balance changes (in a real app, this would come from subscriptions)
-      const change = Math.floor(Math.random() * 10000 - 5000) // Random change between -$50 and $50
-      setCurrentBalance(prev => Math.max(0, prev + change)) // Don't go below 0
-      setIsLive(true)
-    }, 8000) // Update every 8 seconds
-
-    return () => clearInterval(interval)
-  }, [accountId])
 
   return (
     <div className={className}>
@@ -50,7 +51,12 @@ export function LiveBalance({ accountId, initialBalance, className }: LiveBalanc
       </div>
       {isLive && (
         <p className="text-xs text-muted-foreground mt-1">
-          Balance updating in real-time
+          Balance updating via SSE subscription
+        </p>
+      )}
+      {subscriptionResult.error && (
+        <p className="text-xs text-red-500 mt-1">
+          Subscription error: {subscriptionResult.error.message}
         </p>
       )}
     </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSubscribeToTransactionsSubscription } from '@/lib/gql/urql'
 
 interface Transaction {
   id: string
@@ -37,26 +38,30 @@ export function LiveTransactions({ accountId, onNewTransaction, className }: Liv
   const [liveTransactions, setLiveTransactions] = useState<Transaction[]>([])
   const [isLive, setIsLive] = useState(false)
 
-  useEffect(() => {
-    // Simulate real-time transaction updates with polling
-    const interval = setInterval(() => {
-      const newTransaction: Transaction = {
-        id: `txn-live-${Date.now()}`,
-        date: new Date().toISOString(),
-        description: 'Live transaction update',
-        amount: Math.floor(Math.random() * 10000 - 5000),
-        balanceAfter: Math.floor(Math.random() * 1000000),
+  // Subscribe to transaction updates using GraphQL SSE subscription
+  const [subscriptionResult] = useSubscribeToTransactionsSubscription(
+    { variables: { accountId } },
+    (prev, data) => {
+      if (data?.transactionAdded) {
+        const newTransaction = data.transactionAdded
+        setLiveTransactions(prev => [newTransaction, ...prev].slice(0, 5)) // Keep only last 5 live transactions
+        setIsLive(true)
+        onNewTransaction?.(newTransaction)
       }
-      
-      setLiveTransactions(prev => [newTransaction, ...prev].slice(0, 5)) // Keep only last 5 live transactions
-      setIsLive(true)
-      onNewTransaction?.(newTransaction)
-    }, 12000) // New transaction every 12 seconds
-
-    return () => clearInterval(interval)
-  }, [accountId, onNewTransaction])
+      return data
+    }
+  )
 
   if (!isLive || liveTransactions.length === 0) {
+    if (subscriptionResult.error) {
+      return (
+        <div className={className}>
+          <p className="text-xs text-red-500">
+            Transaction subscription error: {subscriptionResult.error.message}
+          </p>
+        </div>
+      )
+    }
     return null
   }
 
@@ -64,7 +69,7 @@ export function LiveTransactions({ accountId, onNewTransaction, className }: Liv
     <div className={className}>
       <div className="flex items-center gap-2 mb-4">
         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <h3 className="text-lg font-semibold text-green-600">Live Transactions</h3>
+        <h3 className="text-lg font-semibold text-green-600">Live Transactions (SSE)</h3>
       </div>
       
       <div className="space-y-3">
@@ -99,7 +104,7 @@ export function LiveTransactions({ accountId, onNewTransaction, className }: Liv
       </div>
       
       <p className="text-xs text-green-600 mt-3 text-center">
-        Real-time transaction updates
+        Real-time transaction updates via SSE
       </p>
     </div>
   )
