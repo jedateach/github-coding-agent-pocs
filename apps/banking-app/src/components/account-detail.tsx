@@ -1,88 +1,88 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useGetAccountQuery } from '@/lib/gql/urql'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { Button } from './ui/button'
-import { LiveBalance } from './live-balance'
-import { LiveTransactions } from './live-transactions'
-import Link from 'next/link'
-import { ArrowLeft, RefreshCw } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { useGetAccountQuery } from "@/lib/gql/urql";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { LiveBalance } from "./live-balance";
+
+import Link from "next/link";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 
 interface Transaction {
-  id: string
-  date: string
-  description: string
-  amount: number
-  balanceAfter: number
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  balanceAfter: number;
 }
 
 function formatCurrency(cents: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(cents / 100)
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(cents / 100);
 }
 
 function formatDate(dateString: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(dateString))
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(dateString));
 }
 
 function getAccountTypeLabel(type: string): string {
   switch (type) {
-    case 'CHECKING':
-      return 'Checking'
-    case 'SAVINGS':
-      return 'Savings'
-    case 'CREDIT':
-      return 'Credit'
+    case "CHECKING":
+      return "Checking";
+    case "SAVINGS":
+      return "Savings";
+    case "CREDIT":
+      return "Credit";
     default:
-      return type
+      return type;
   }
 }
 
 interface AccountDetailProps {
-  accountId: string
+  accountId: string;
 }
 
 export function AccountDetail({ accountId }: AccountDetailProps) {
-  const [transactionOffset, setTransactionOffset] = useState(0)
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>([])
-  
+  const [transactionOffset, setTransactionOffset] = useState(0);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+
   const [{ data, fetching, error }, refetch] = useGetAccountQuery({
     variables: {
       id: accountId,
       transactionLimit: 30,
       transactionOffset,
     },
-  })
+  });
 
   useEffect(() => {
     if (data?.account?.transactions) {
       if (transactionOffset === 0) {
         // First load, replace all transactions
-        setAllTransactions(data.account.transactions)
+        setAllTransactions(data.account.transactions);
       } else {
         // Subsequent loads, append new transactions
-        setAllTransactions(prev => [...prev, ...data.account!.transactions])
+        setAllTransactions((prev) => [...prev, ...data.account!.transactions]);
       }
     }
-  }, [data, transactionOffset])
+  }, [data, transactionOffset]);
 
   const loadMoreTransactions = () => {
-    setTransactionOffset(prev => prev + 30)
-  }
+    setTransactionOffset((prev) => prev + 30);
+  };
 
   const handleNewTransaction = (newTransaction: Transaction) => {
     // Add new live transaction to the top of the list
-    setAllTransactions(prev => [newTransaction, ...prev])
-  }
+    setAllTransactions((prev) => [newTransaction, ...prev]);
+  };
 
   if (fetching && transactionOffset === 0) {
     return (
@@ -93,7 +93,7 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
           <div className="h-32 bg-gray-200 rounded"></div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -101,14 +101,16 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
       <div className="container mx-auto py-8">
         <Card>
           <CardContent className="p-6">
-            <p className="text-red-600">Error loading account details: {error.message}</p>
+            <p className="text-red-600">
+              Error loading account details: {error.message}
+            </p>
             <Button onClick={() => refetch()} className="mt-4">
               Try Again
             </Button>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   if (!data?.account) {
@@ -126,10 +128,10 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
-  const { account } = data
+  const { account } = data;
 
   return (
     <div className="container mx-auto py-8 space-y-6">
@@ -141,17 +143,19 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
             Back to Accounts
           </Link>
         </Button>
-        
+
         <Button
           variant="outline"
           onClick={() => {
-            setTransactionOffset(0)
-            setAllTransactions([])
-            refetch()
+            setTransactionOffset(0);
+            setAllTransactions([]);
+            refetch();
           }}
           disabled={fetching}
         >
-          <RefreshCw className={`w-4 h-4 mr-2 ${fetching ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`w-4 h-4 mr-2 ${fetching ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </div>
@@ -174,7 +178,7 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Current Balance</p>
-              <LiveBalance 
+              <LiveBalance
                 accountId={account.id}
                 initialBalance={account.balance}
               />
@@ -182,12 +186,6 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Live Transactions */}
-      <LiveTransactions 
-        accountId={accountId}
-        onNewTransaction={handleNewTransaction}
-      />
 
       {/* Historical Transactions */}
       <Card>
@@ -213,10 +211,14 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className={`font-semibold ${
-                      transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.amount > 0 ? '+' : ''}
+                    <p
+                      className={`font-semibold ${
+                        transaction.amount > 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {transaction.amount > 0 ? "+" : ""}
                       {formatCurrency(transaction.amount)}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -225,7 +227,7 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
                   </div>
                 </div>
               ))}
-              
+
               {/* Load More Button */}
               <div className="text-center pt-4">
                 <Button
@@ -239,7 +241,7 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
                       Loading...
                     </>
                   ) : (
-                    'Load More Transactions'
+                    "Load More Transactions"
                   )}
                 </Button>
               </div>
@@ -248,5 +250,5 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

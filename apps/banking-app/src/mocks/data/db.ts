@@ -1,4 +1,4 @@
-import { factory, primaryKey } from '@mswjs/data';
+import { factory, primaryKey } from "@mswjs/data";
 
 // Define the data models matching our GraphQL schema
 export const db = factory({
@@ -39,71 +39,63 @@ export function initializeDatabase() {
 
   // Create main user
   const user = db.user.create({
-    id: '1',
-    name: 'John Doe',
+    id: "1",
+    name: "John Doe",
   });
 
   // Create personal party
   const personalParty = db.party.create({
-    id: 'party-1',
-    type: 'PERSON',
-    name: 'John Doe (Personal)',
+    id: "party-1",
+    type: "PERSON",
+    name: "John Doe",
     userId: user.id,
   });
 
   // Create business party
   const businessParty = db.party.create({
-    id: 'party-2',
-    type: 'BUSINESS',
-    name: 'Acme Corp',
+    id: "party-2",
+    type: "BUSINESS",
+    name: "Acme Corp",
     userId: user.id,
   });
 
   // Create personal accounts
   const checkingAccount = db.account.create({
-    id: 'acc-1',
-    name: 'Checking Account',
-    type: 'CHECKING',
+    id: "acc-1",
+    name: "Checking Account",
+    type: "CHECKING",
     balance: 250000, // $2,500.00 in cents
     partyId: personalParty.id,
   });
 
   const savingsAccount = db.account.create({
-    id: 'acc-2',
-    name: 'Savings Account',
-    type: 'SAVINGS',
+    id: "acc-2",
+    name: "Savings Account",
+    type: "SAVINGS",
     balance: 1500000, // $15,000.00 in cents
     partyId: personalParty.id,
   });
 
   // Create business accounts
   const businessCheckingAccount = db.account.create({
-    id: 'acc-3',
-    name: 'Business Checking',
-    type: 'CHECKING',
+    id: "acc-3",
+    name: "Business Checking",
+    type: "CHECKING",
     balance: 500000, // $5,000.00 in cents
     partyId: businessParty.id,
   });
 
-  const businessSavingsAccount = db.account.create({
-    id: 'acc-4',
-    name: 'Business Savings',
-    type: 'SAVINGS',
-    balance: 2500000, // $25,000.00 in cents
-    partyId: businessParty.id,
-  });
-
   // Create some initial transactions for each account
-  const accounts = [checkingAccount, savingsAccount, businessCheckingAccount, businessSavingsAccount];
-  
+  const accounts = [checkingAccount, savingsAccount, businessCheckingAccount];
+
   accounts.forEach((account) => {
     let currentBalance = account.balance;
-    
+
     // Generate 30 historical transactions
     for (let i = 0; i < 30; i++) {
       const amount = Math.floor(Math.random() * 10000) - 5000; // Random +/- $50
       currentBalance -= amount; // Work backwards from current balance
-      
+
       db.transaction.create({
         id: `txn-${account.id}-${i}`,
         accountId: account.id,
@@ -118,6 +110,6 @@ export function initializeDatabase() {
   return {
     user,
     parties: [personalParty, businessParty],
-    accounts: [checkingAccount, savingsAccount, businessCheckingAccount, businessSavingsAccount],
+    accounts: [checkingAccount, savingsAccount, businessCheckingAccount],
   };
 }
