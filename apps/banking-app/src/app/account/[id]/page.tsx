@@ -1,5 +1,4 @@
-import { AccountDetail } from '@/components/account-detail'
-import { PartyProvider } from '@/components/party-provider'
+import { AccountDetail } from '../../../components/account-detail'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -19,8 +18,8 @@ export default async function AccountDetailPage({ params }: PageProps) {
   const { id } = await params
   
   return (
-    <PartyProvider>
+    <div className="container mx-auto py-8">
       <AccountDetail accountId={id} />
-    </PartyProvider>
+    </div>
   )
 }

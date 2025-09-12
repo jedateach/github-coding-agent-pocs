@@ -1,6 +1,8 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Providers } from '@/components/providers'
+import { Providers } from '../components/providers'
+import { AppHeader } from '../components/app-header'
+import { PartyProvider } from '../components/party-provider'
 
 export const metadata: Metadata = {
   title: 'Banking POC - GraphQL Demo',
@@ -16,7 +18,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans">
         <Providers>
-          {children}
+          <PartyProvider>
+            <AppHeader />
+            <main className="min-h-screen">
+              {children}
+            </main>
+          </PartyProvider>
         </Providers>
       </body>
     </html>

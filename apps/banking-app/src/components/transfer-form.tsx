@@ -9,8 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import Link from 'next/link'
-import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle } from 'lucide-react'
 
 const transferSchema = z.object({
   fromAccountId: z.string().min(1, 'Please select a source account'),
@@ -48,7 +47,11 @@ function getAccountTypeLabel(type: string): string {
   }
 }
 
-export function TransferForm() {
+interface TransferFormProps {
+  onSuccess?: () => void
+}
+
+export function TransferForm({ onSuccess }: TransferFormProps) {
   const [isSuccess, setIsSuccess] = useState(false)
   const [transferResult, setTransferResult] = useState<any>(null)
   
@@ -98,6 +101,11 @@ export function TransferForm() {
       setTransferResult(result.data?.transfer)
       setIsSuccess(true)
       reset()
+      
+      // Call the onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (error) {
       console.error('Transfer failed:', error)
     }
@@ -130,10 +138,8 @@ export function TransferForm() {
             >
               Make Another Transfer
             </Button>
-            <Button asChild>
-              <Link href="/">
-                Back to Accounts
-              </Link>
+            <Button onClick={onSuccess}>
+              Close
             </Button>
           </div>
         </CardContent>
@@ -143,18 +149,8 @@ export function TransferForm() {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" asChild>
-        <Link href="/">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Accounts
-        </Link>
-      </Button>
-
       <Card>
-        <CardHeader>
-          <CardTitle>Transfer Between Accounts</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* From Account */}
             <div className="space-y-2">
