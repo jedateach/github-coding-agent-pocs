@@ -5,6 +5,7 @@ import { useGetAccountQuery } from "@/lib/gql/urql";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { LiveBalance } from "./live-balance";
+import { BalanceChart } from "./balance-chart";
 
 import Link from "next/link";
 import { ArrowLeft, RefreshCw } from "lucide-react";
@@ -77,11 +78,6 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
 
   const loadMoreTransactions = () => {
     setTransactionOffset((prev) => prev + 30);
-  };
-
-  const handleNewTransaction = (newTransaction: Transaction) => {
-    // Add new live transaction to the top of the list
-    setAllTransactions((prev) => [newTransaction, ...prev]);
   };
 
   if (fetching && transactionOffset === 0) {
@@ -184,6 +180,19 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Balance Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Real-time Balance Chart</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BalanceChart
+            accountId={account.id}
+            initialBalance={account.balance}
+          />
         </CardContent>
       </Card>
 
