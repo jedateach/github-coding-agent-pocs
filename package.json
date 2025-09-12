@@ -1,0 +1,28 @@
+{
+  "name": "nextjs-graphql-banking-poc",
+  "version": "1.0.0",
+  "description": "GraphQL Banking POC with Next.js, TypeScript, and URQL",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "test:e2e": "pnpm -r run test:e2e",
+    "lint": "pnpm -r run lint",
+    "type-check": "pnpm -r run type-check",
+    "codegen": "pnpm -r run codegen"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

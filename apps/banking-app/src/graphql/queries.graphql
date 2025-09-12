@@ -1,0 +1,17 @@
+query GetCurrentUser {
+  currentUser {
+    id
+    name
+    parties {
+      id
+      type
+      name
+      accounts {
+        id
+        name
+        type
+        balance
+      }
+    }
+  }
+}

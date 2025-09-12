@@ -1,0 +1,19 @@
+mutation Transfer($input: TransferInput!) {
+  transfer(input: $input) {
+    id
+    date
+    description
+    amount
+    balanceAfter
+  }
+}
+
+mutation Payment($input: PaymentInput!) {
+  payment(input: $input) {
+    id
+    date
+    description
+    amount
+    balanceAfter
+  }
+}
