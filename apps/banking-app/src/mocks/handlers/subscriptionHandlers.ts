@@ -145,7 +145,9 @@ function accountBalanceStream(accountId: string, id: string): ReadableStream {
   return new ReadableStream({
     start(controller) {
       // Get initial balance from database
-      const account = db.account.findFirst({ where: { id: { equals: accountId } } });
+      const account = db.account.findFirst({
+        where: { id: { equals: accountId } },
+      });
       if (!account) {
         sendSSE(controller, "error", id, {
           errors: [{ message: "Account not found" }],
@@ -164,53 +166,59 @@ function accountBalanceStream(accountId: string, id: string): ReadableStream {
         },
       });
 
-      // Bursty balance updates
+      // Random interval updates (1-5 seconds, skewed toward 5)
       let count = 0;
       let active = true;
-      function burstUpdate() {
+      function sendUpdate() {
         if (!active || count >= 300) {
           sendSSE(controller, "complete", id);
+          controller.close();
           return;
         }
-        // Simulate a burst: 2-8 rapid updates
-        const burstSize = Math.floor(Math.random() * 7) + 2;
-        for (let i = 0; i < burstSize && count < 300; i++) {
-          // Get current balance from database
-          const currentAccount = db.account.findFirst({ where: { id: { equals: accountId } } });
-          if (!currentAccount) return;
-
-          // Random payment between $1.00 and $8.00, in cents
-          const payment = Math.floor(Math.random() * (800 - 100 + 1)) + 100;
-          const newBalance = currentAccount.balance + payment;
-          
-          // Update the database
-          db.account.update({
-            where: { id: { equals: accountId } },
-            data: { balance: newBalance },
-          });
-
-          sendSSE(controller, "next", id, {
-            data: {
-              accountBalanceUpdated: {
-                id: accountId,
-                balance: newBalance,
-                payment,
-                description: `Payment received: $${(payment / 100).toFixed(2)}`,
-                timestamp: new Date().toISOString(),
-              },
-            },
-          });
-          count++;
+        // Get current balance from database
+        const currentAccount = db.account.findFirst({
+          where: { id: { equals: accountId } },
+        });
+        if (!currentAccount) {
+          controller.close();
+          return;
         }
-        // Wait 200ms to 2s before next burst
+
+        // Random payment between $1.00 and $8.00, in cents
+        const payment = Math.floor(Math.random() * (120 - -120 + 1)) + -120;
+        const newBalance = currentAccount.balance + payment;
+
+        // Update the database
+        db.account.update({
+          where: { id: { equals: accountId } },
+          data: { balance: newBalance },
+        });
+
+        sendSSE(controller, "next", id, {
+          data: {
+            accountBalanceUpdated: {
+              id: accountId,
+              balance: newBalance,
+              payment,
+              description: `Payment received: $${(payment / 100).toFixed(2)}`,
+              timestamp: new Date().toISOString(),
+            },
+          },
+        });
+        count++;
+
+        // Schedule next update with random delay (1-5s, skewed toward 5)
         if (count < 300) {
-          const nextDelay = Math.floor(Math.random() * 1800) + 200;
-          setTimeout(burstUpdate, nextDelay);
+          const delay = 1000 + 10000 * (1 - Math.sqrt(Math.random()));
+          setTimeout(sendUpdate, delay);
         } else {
           sendSSE(controller, "complete", id);
+          controller.close();
         }
       }
-      burstUpdate();
+      // Start the first update after initial delay
+      const initialDelay = 1000 + 4000 * (1 - Math.sqrt(Math.random()));
+      setTimeout(sendUpdate, initialDelay);
       return () => {
         active = false;
       };
@@ -222,7 +230,9 @@ function transactionsStream(accountId: string, id: string): ReadableStream {
   return new ReadableStream({
     start(controller) {
       // Verify account exists
-      const account = db.account.findFirst({ where: { id: { equals: accountId } } });
+      const account = db.account.findFirst({
+        where: { id: { equals: accountId } },
+      });
       if (!account) {
         sendSSE(controller, "error", id, {
           errors: [{ message: "Account not found" }],
@@ -232,14 +242,25 @@ function transactionsStream(accountId: string, id: string): ReadableStream {
       }
 
       let count = 0;
-      const interval = setInterval(() => {
+      let active = true;
+      function sendTransaction() {
+        if (!active || count >= 3) {
+          sendSSE(controller, "complete", id);
+          controller.close();
+          return;
+        }
         // Get current balance from database
-        const currentAccount = db.account.findFirst({ where: { id: { equals: accountId } } });
-        if (!currentAccount) return;
+        const currentAccount = db.account.findFirst({
+          where: { id: { equals: accountId } },
+        });
+        if (!currentAccount) {
+          controller.close();
+          return;
+        }
 
         const amount = Math.floor(Math.random() * 10000 - 5000);
         const newBalance = currentAccount.balance + amount;
-        
+
         // Update account balance in database
         db.account.update({
           where: { id: { equals: accountId } },
@@ -248,7 +269,9 @@ function transactionsStream(accountId: string, id: string): ReadableStream {
 
         // Create new transaction in database
         const transaction = db.transaction.create({
-          id: `txn-live-${accountId}-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+          id: `txn-live-${accountId}-${Date.now()}-${Math.floor(
+            Math.random() * 1000000
+          )}`,
           date: new Date().toISOString(),
           description: "Live transaction update",
           amount,
@@ -262,13 +285,21 @@ function transactionsStream(accountId: string, id: string): ReadableStream {
           },
         });
         count++;
-        if (count >= 3) {
-          clearInterval(interval);
+
+        // Schedule next transaction with random delay (1-5s, skewed toward 5)
+        if (count < 3) {
+          const delay = 1000 + 4000 * (1 - Math.sqrt(Math.random()));
+          setTimeout(sendTransaction, delay);
+        } else {
           sendSSE(controller, "complete", id);
+          controller.close();
         }
-      }, 1000);
+      }
+      // Start the first transaction after initial delay
+      const initialDelay = 1000 + 4000 * (1 - Math.sqrt(Math.random()));
+      setTimeout(sendTransaction, initialDelay);
       return () => {
-        clearInterval(interval);
+        active = false;
       };
     },
   });
