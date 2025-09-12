@@ -44,6 +44,7 @@
     "@graphql-codegen/typescript-operations": "^4.0.1",
     "@graphql-codegen/typescript-urql": "^4.0.0",
     "@graphql-codegen/urql-introspection": "^3.0.0",
+    "@mswjs/data": "^0.16.2",
     "@playwright/test": "^1.40.0",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",

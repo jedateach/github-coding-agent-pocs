@@ -1,21 +1,28 @@
 import { graphql, HttpResponse } from "msw";
-import { mockUser } from "../data/mockUser";
-import { generateMockTransactions } from "../data/generateMockTransactions";
-import { accountBalances } from "../accountBalances";
+import { db } from "../data/db";
 
 export const queryHandlers = [
   graphql.query("GetCurrentUser", () => {
-    const updatedUser = {
-      ...mockUser,
-      parties: mockUser.parties.map((party) => ({
+    const user = db.user.findFirst({ where: { id: { equals: '1' } } });
+    if (!user) {
+      return HttpResponse.json({ errors: [{ message: "User not found" }] });
+    }
+
+    const parties = db.party.findMany({ where: { userId: { equals: user.id } } });
+    const partiesWithAccounts = parties.map((party) => {
+      const accounts = db.account.findMany({ where: { partyId: { equals: party.id } } });
+      return {
         ...party,
-        accounts: party.accounts.map((account) => ({
-          ...account,
-          balance: accountBalances.get(account.id) || account.balance,
-        })),
-      })),
+        accounts,
+      };
+    });
+
+    const currentUser = {
+      ...user,
+      parties: partiesWithAccounts,
     };
-    return HttpResponse.json({ data: { currentUser: updatedUser } });
+
+    return HttpResponse.json({ data: { currentUser } });
   }),
 
   graphql.query("GetAccount", ({ variables }) => {
@@ -24,25 +31,25 @@ export const queryHandlers = [
       transactionLimit = 30,
       transactionOffset = 0,
     } = variables as any;
-    let account = null;
-    for (const party of mockUser.parties) {
-      const foundAccount = party.accounts.find((acc) => acc.id === id);
-      if (foundAccount) {
-        account = {
-          ...foundAccount,
-          balance: accountBalances.get(id) || foundAccount.balance,
-          transactions: generateMockTransactions(
-            id,
-            transactionLimit,
-            transactionOffset
-          ),
-        };
-        break;
-      }
-    }
+    
+    const account = db.account.findFirst({ where: { id: { equals: id } } });
     if (!account) {
       return HttpResponse.json({ errors: [{ message: "Account not found" }] });
     }
-    return HttpResponse.json({ data: { account } });
+
+    // Get transactions for this account with pagination
+    const transactions = db.transaction.findMany({
+      where: { accountId: { equals: id } },
+      orderBy: { date: 'desc' },
+      take: transactionLimit,
+      skip: transactionOffset,
+    });
+
+    const accountWithTransactions = {
+      ...account,
+      transactions,
+    };
+
+    return HttpResponse.json({ data: { account: accountWithTransactions } });
   }),
 ];

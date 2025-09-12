@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { accountBalances, simulateBalanceUpdate } from "../accountBalances";
+import { db } from "../data/db";
 
 // --- Protocol Utilities ---
 const SSE_HEADERS = {
@@ -144,16 +144,26 @@ export const subscriptionHandlers = [
 function accountBalanceStream(accountId: string, id: string): ReadableStream {
   return new ReadableStream({
     start(controller) {
-      // Initial balance event
-      let balance = accountBalances.get(accountId) || 0;
+      // Get initial balance from database
+      const account = db.account.findFirst({ where: { id: { equals: accountId } } });
+      if (!account) {
+        sendSSE(controller, "error", id, {
+          errors: [{ message: "Account not found" }],
+        });
+        controller.close();
+        return;
+      }
+
+      // Send initial balance event
       sendSSE(controller, "next", id, {
         data: {
           accountBalanceUpdated: {
             id: accountId,
-            balance,
+            balance: account.balance,
           },
         },
       });
+
       // Bursty balance updates
       let count = 0;
       let active = true;
@@ -165,14 +175,25 @@ function accountBalanceStream(accountId: string, id: string): ReadableStream {
         // Simulate a burst: 2-8 rapid updates
         const burstSize = Math.floor(Math.random() * 7) + 2;
         for (let i = 0; i < burstSize && count < 300; i++) {
+          // Get current balance from database
+          const currentAccount = db.account.findFirst({ where: { id: { equals: accountId } } });
+          if (!currentAccount) return;
+
           // Random payment between $1.00 and $8.00, in cents
           const payment = Math.floor(Math.random() * (800 - 100 + 1)) + 100;
-          balance += payment;
+          const newBalance = currentAccount.balance + payment;
+          
+          // Update the database
+          db.account.update({
+            where: { id: { equals: accountId } },
+            data: { balance: newBalance },
+          });
+
           sendSSE(controller, "next", id, {
             data: {
               accountBalanceUpdated: {
                 id: accountId,
-                balance,
+                balance: newBalance,
                 payment,
                 description: `Payment received: $${(payment / 100).toFixed(2)}`,
                 timestamp: new Date().toISOString(),
@@ -200,18 +221,41 @@ function accountBalanceStream(accountId: string, id: string): ReadableStream {
 function transactionsStream(accountId: string, id: string): ReadableStream {
   return new ReadableStream({
     start(controller) {
+      // Verify account exists
+      const account = db.account.findFirst({ where: { id: { equals: accountId } } });
+      if (!account) {
+        sendSSE(controller, "error", id, {
+          errors: [{ message: "Account not found" }],
+        });
+        controller.close();
+        return;
+      }
+
       let count = 0;
       const interval = setInterval(() => {
-        // Generate a more unique transaction ID using accountId, timestamp, and a random suffix
-        const transaction = {
-          id: `txn-${accountId}-${Date.now()}-${Math.floor(
-            Math.random() * 1000000
-          )}`,
+        // Get current balance from database
+        const currentAccount = db.account.findFirst({ where: { id: { equals: accountId } } });
+        if (!currentAccount) return;
+
+        const amount = Math.floor(Math.random() * 10000 - 5000);
+        const newBalance = currentAccount.balance + amount;
+        
+        // Update account balance in database
+        db.account.update({
+          where: { id: { equals: accountId } },
+          data: { balance: newBalance },
+        });
+
+        // Create new transaction in database
+        const transaction = db.transaction.create({
+          id: `txn-live-${accountId}-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
           date: new Date().toISOString(),
           description: "Live transaction update",
-          amount: Math.floor(Math.random() * 10000 - 5000),
-          balanceAfter: accountBalances.get(accountId) || 0,
-        };
+          amount,
+          balanceAfter: newBalance,
+          accountId,
+        });
+
         sendSSE(controller, "next", id, {
           data: {
             transactionAdded: transaction,
