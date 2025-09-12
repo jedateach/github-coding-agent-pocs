@@ -1,4 +1,4 @@
-import { AccountsList } from '../components/accounts-list'
+import { AccountsList } from '@/components/accounts-list'
 
 export default function HomePage() {
   return (

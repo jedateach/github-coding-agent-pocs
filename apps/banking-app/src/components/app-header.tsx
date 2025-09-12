@@ -4,7 +4,7 @@ import { Button } from './ui/button'
 import { PartySelector } from './party-selector'
 import { TransferModal } from './transfer-modal'
 import Link from 'next/link'
-import { ArrowRightLeft, Send } from 'lucide-react'
+import { Send } from 'lucide-react'
 
 export function AppHeader() {
   return (

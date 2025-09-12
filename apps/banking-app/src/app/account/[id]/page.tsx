@@ -1,4 +1,4 @@
-import { AccountDetail } from '../../../components/account-detail'
+import { AccountDetail } from '@/components/account-detail'
 
 interface PageProps {
   params: Promise<{ id: string }>

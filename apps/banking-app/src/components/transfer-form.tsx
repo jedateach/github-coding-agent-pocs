@@ -53,7 +53,7 @@ interface TransferFormProps {
 
 export function TransferForm({ onSuccess }: TransferFormProps) {
   const [isSuccess, setIsSuccess] = useState(false)
-  const [transferResult, setTransferResult] = useState<any>(null)
+  const [transferResult, setTransferResult] = useState<unknown>(null)
   
   const [{ data }] = useGetCurrentUserQuery()
   const [, executeTransfer] = useTransferMutation()
