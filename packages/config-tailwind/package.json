@@ -1,0 +1,13 @@
+{
+  "name": "@myrepo/config-tailwind",
+  "version": "0.1.0",
+  "description": "Shared Tailwind CSS configuration",
+  "main": "tailwind.config.js",
+  "files": ["tailwind.config.js"],
+  "dependencies": {
+    "tailwindcss": "^3.4.17"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

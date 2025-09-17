@@ -1,0 +1,16 @@
+{
+  "name": "@myrepo/config-eslint",
+  "version": "0.1.0",
+  "description": "Shared ESLint configuration",
+  "main": "eslint.config.js",
+  "files": ["eslint.config.js"],
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.3"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
